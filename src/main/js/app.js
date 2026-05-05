@@ -9,10 +9,11 @@ let currentPage = getPageFromQuery();
 
 function getPageFromQuery() {
   const params = new URLSearchParams(window.location.search);
-  const page = Number(params.get('page') ?? 0);
+  const pageValue = params.get('page') ?? '0';
+  const page = Number(pageValue);
 
-  if (!Number.isInteger(page) || page < 0) {
-    return 0;
+  if (!Number.isInteger(page) || String(page) !== pageValue) {
+    return null;
   }
 
   return page;
@@ -34,16 +35,22 @@ async function loadImages() {
   items = await response.json();
   items.sort((a, b) => b.time - a.time);
 
-  normalizeCurrentPage();
+  if (!isCurrentPageValid()) {
+    showErrorPage();
+    return;
+  }
+
   renderPage();
 }
 
-function normalizeCurrentPage() {
-  const lastPage = Math.max(0, Math.ceil(items.length / pageSize) - 1);
+function isCurrentPageValid() {
+  const pages = Math.ceil(items.length / pageSize);
 
-  if (currentPage > lastPage) {
-    currentPage = lastPage;
-  }
+  return currentPage !== null && currentPage >= 0 && currentPage < pages;
+}
+
+function showErrorPage() {
+  window.location.href = './src/main/html/error.html';
 }
 
 function renderPage() {
