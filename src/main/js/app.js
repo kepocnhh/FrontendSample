@@ -1,4 +1,5 @@
 const imageList = document.getElementById('image-list');
+const prevButton = document.getElementById('prev-page');
 const nextButton = document.getElementById('next-page');
 
 const pageSize = 3;
@@ -61,8 +62,15 @@ function renderPage() {
     imageList.append(image);
   }
 
+  prevButton.disabled = currentPage === 0;
   nextButton.disabled = end >= items.length;
 }
+
+prevButton.addEventListener('click', () => {
+  if (currentPage > 0) {
+    setPageInQuery(currentPage - 1);
+  }
+});
 
 nextButton.addEventListener('click', () => {
   if ((currentPage + 1) * pageSize < items.length) {
