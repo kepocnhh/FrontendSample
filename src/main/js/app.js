@@ -4,7 +4,24 @@ const nextButton = document.getElementById('next-page');
 const pageSize = 3;
 
 let items = [];
-let currentPage = 0;
+let currentPage = getPageFromQuery();
+
+function getPageFromQuery() {
+  const params = new URLSearchParams(window.location.search);
+  const page = Number(params.get('page') ?? 0);
+
+  if (!Number.isInteger(page) || page < 0) {
+    return 0;
+  }
+
+  return page;
+}
+
+function setPageInQuery(page) {
+  const url = new URL(window.location.href);
+  url.searchParams.set('page', page);
+  window.location.href = url.toString();
+}
 
 async function loadImages() {
   const response = await fetch('./src/main/json/db.json');
@@ -16,7 +33,16 @@ async function loadImages() {
   items = await response.json();
   items.sort((a, b) => b.time - a.time);
 
+  normalizeCurrentPage();
   renderPage();
+}
+
+function normalizeCurrentPage() {
+  const lastPage = Math.max(0, Math.ceil(items.length / pageSize) - 1);
+
+  if (currentPage > lastPage) {
+    currentPage = lastPage;
+  }
 }
 
 function renderPage() {
@@ -40,8 +66,7 @@ function renderPage() {
 
 nextButton.addEventListener('click', () => {
   if ((currentPage + 1) * pageSize < items.length) {
-    currentPage += 1;
-    renderPage();
+    setPageInQuery(currentPage + 1);
   }
 });
 
