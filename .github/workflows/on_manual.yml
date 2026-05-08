@@ -1,9 +1,0 @@
-on:
- workflow_dispatch:
-
-jobs:
- build:
-  runs-on: ubuntu-24.04
-  steps:
-   - run: |
-      echo 'Not implemented'; exit 1 # todo
