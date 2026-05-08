@@ -25,3 +25,5 @@ jobs:
       for COMMAND in "${COMMANDS[@]}"; do
        docker exec -w "${WORK_DIR}" container /usr/local/bin/bash -c "${COMMAND}"
       done
+   - if: always()
+     run: docker rm -f container || true
