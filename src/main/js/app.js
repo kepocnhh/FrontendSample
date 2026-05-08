@@ -146,7 +146,7 @@ function renderPage() {
 
   for (const item of pageItems) {
     const image = document.createElement('img');
-    image.src = `./src/main/res/${item.id}.img`;
+    image.src = `./src/main/res/${item.id}.jpg`;
     image.alt = item.id;
     image.loading = 'lazy';
 
