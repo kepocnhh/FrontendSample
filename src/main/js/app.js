@@ -3,7 +3,7 @@ const prevButton = document.getElementById('prev-page');
 const nextButton = document.getElementById('next-page');
 
 const pageSize = 3;
-const recordSize = 24;
+const recordSize = 16;
 
 let count = 0;
 let pageItems = [];
@@ -28,7 +28,8 @@ function setPageInQuery(page) {
 }
 
 async function loadImages() {
-  count = await loadCount();
+  const countData = await loadCount();
+  count = countData.count;
 
   if (!isCurrentPageValid()) {
     showErrorPage();
@@ -58,11 +59,16 @@ async function loadCount() {
 
   const buffer = await response.arrayBuffer();
 
-  if (buffer.byteLength !== 4) {
+  if (buffer.byteLength !== 8) {
     throw new Error(`Invalid count.bin size: ${buffer.byteLength}`);
   }
 
-  return new DataView(buffer).getUint32(0, false);
+  const view = new DataView(buffer);
+
+  return {
+    count: view.getUint32(0, false),
+    lastCounter: view.getUint32(4, false),
+  };
 }
 
 async function loadPageItems() {
@@ -108,7 +114,7 @@ function parseRecords(buffer) {
   for (let offset = 0; offset < buffer.byteLength; offset += recordSize) {
     records.push({
       id: parseUuid(view, offset),
-      time: Number(view.getBigUint64(offset + 16, false)),
+      time: Number(view.getBigUint64(offset, false)),
     });
   }
 
