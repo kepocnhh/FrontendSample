@@ -3,7 +3,7 @@ on:
 
 jobs:
  build:
-  if: github.ref == 'refs/heads/gh-pages'
+  if: github.ref == 'refs/heads/test-pages'
   runs-on: ubuntu-24.04
   steps:
    - env:
@@ -14,7 +14,7 @@ jobs:
       docker run -id --name container 'docker.io/kepocnhh/debian-trixie-amd64:10a'
       WORK_DIR="/usr/local/src/${REPOSITORY_OWNER}/${REPOSITORY_NAME}"
       VCS_URL="https://${VCS_PAT}@github.com/${REPOSITORY_OWNER}/${REPOSITORY_NAME}.git"
-      TARGET_BRANCH='gh-pages'
+      TARGET_BRANCH='test-pages'
       docker exec container /usr/local/bin/bash -c "mkdir -p '${WORK_DIR}'"
       COMMANDS=(
        'git init'
