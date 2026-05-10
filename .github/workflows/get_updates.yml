@@ -2,7 +2,7 @@ on:
  workflow_dispatch:
 
 concurrency:
- group: manual-image-update
+ group: get_updates
  cancel-in-progress: false
 
 jobs:
@@ -24,7 +24,7 @@ jobs:
        "git init && git remote add origin 'https://${VCS_PAT}@github.com/${REPOSITORY_OWNER}/${REPOSITORY_NAME}.git'"
        "git fetch origin '${REMOTE_BRANCH}' && git checkout -b x FETCH_HEAD"
        './src/main/sh/config.sh'
-       './src/main/sh/add_img.sh'
+       './src/main/sh/get_updates.sh'
        "git push origin HEAD:${REMOTE_BRANCH}"
       )
       for COMMAND in "${COMMANDS[@]}"; do
