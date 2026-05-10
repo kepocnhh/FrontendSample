@@ -16,17 +16,13 @@ jobs:
       REMOTE_BRANCH: "${{github.event.ref}}"
      run: |
       docker run \
-       -e REPOSITORY_OWNER='${REPOSITORY_OWNER}' \
-       -e REPOSITORY_NAME='${REPOSITORY_NAME}' \
        -e VCS_PAT='${VCS_PAT}' \
-       -e REMOTE_BRANCH='${REMOTE_BRANCH}' \
        -id --name container 'docker.io/kepocnhh/debian-trixie-amd64:11a'
       WORK_DIR="/usr/local/src/${REPOSITORY_OWNER}/${REPOSITORY_NAME}"
-      VCS_URL="https://${VCS_PAT}@github.com/${REPOSITORY_OWNER}/${REPOSITORY_NAME}.git"
       docker exec container /usr/local/bin/bash -c "mkdir -p '${WORK_DIR}'"
       COMMANDS=(
        'git init'
-       "git remote add origin '${VCS_URL}'"
+       "git remote add origin 'https://${VCS_PAT}@github.com/${REPOSITORY_OWNER}/${REPOSITORY_NAME}.git'"
        "git fetch origin '${REMOTE_BRANCH}'"
        'git checkout -b x FETCH_HEAD'
        './src/main/sh/config.sh'
