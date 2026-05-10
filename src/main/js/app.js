@@ -4,6 +4,7 @@ const nextButton = document.getElementById('next-page');
 
 const pageSize = 3;
 const recordSize = 16;
+const cacheKey = Date.now();
 
 let count = 0;
 let pageItems = [];
@@ -51,7 +52,9 @@ function showErrorPage() {
 }
 
 async function loadCount() {
-  const response = await fetch('./src/main/bin/count.bin');
+  const response = await fetch(`./src/main/bin/count.bin?cache=${cacheKey}`, {
+    cache: 'no-store',
+  });
 
   if (!response.ok) {
     throw new Error(`Cannot load count.bin: ${response.status}`);
@@ -73,7 +76,8 @@ async function loadCount() {
 
 async function loadPageItems() {
   const { byteStart, byteEnd } = getPageBounds();
-  const response = await fetch('./src/main/bin/db.bin', {
+  const response = await fetch(`./src/main/bin/db.bin?cache=${cacheKey}`, {
+    cache: 'no-store',
     headers: {
       Range: `bytes=${byteStart}-${byteEnd}`,
     },
@@ -142,7 +146,7 @@ function renderPage() {
 
   for (const item of pageItems) {
     const image = document.createElement('img');
-    image.src = `./src/main/res/${item.id}.img`;
+    image.src = `./src/main/res/${item.id}.jpg`;
     image.alt = item.id;
     image.loading = 'lazy';
 
