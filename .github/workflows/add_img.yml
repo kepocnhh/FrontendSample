@@ -29,8 +29,7 @@ jobs:
        "git remote add origin '${VCS_URL}'"
        "git fetch origin '${REMOTE_BRANCH}'"
        'git checkout -b x FETCH_HEAD'
-       'git config user.name "github-actions"'
-       'git config user.email "github-actions@github.com"'
+       './src/main/sh/config.sh'
        'TIMESTAMP=$(TZ=utc date +%s)
         COUNTER="$(xxd -p -c 8 src/main/res/counts.bin)"
         COUNT=$((16#${COUNTER:0:8} + 1))
