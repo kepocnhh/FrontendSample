@@ -52,18 +52,18 @@ function showErrorPage() {
 }
 
 async function loadCount() {
-  const response = await fetch(`./src/main/bin/count.bin?cache=${cacheKey}`, {
+  const response = await fetch(`./src/main/bin/counts.bin?cache=${cacheKey}`, {
     cache: 'no-store',
   });
 
   if (!response.ok) {
-    throw new Error(`Cannot load count.bin: ${response.status}`);
+    throw new Error(`Cannot load counts.bin: ${response.status}`);
   }
 
   const buffer = await response.arrayBuffer();
 
   if (buffer.byteLength !== 8) {
-    throw new Error(`Invalid count.bin size: ${buffer.byteLength}`);
+    throw new Error(`Invalid counts.bin size: ${buffer.byteLength}`);
   }
 
   const view = new DataView(buffer);
