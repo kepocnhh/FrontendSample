@@ -3,7 +3,8 @@ const prevButton = document.getElementById('prev-page');
 const nextButton = document.getElementById('next-page');
 
 const pageSize = 3;
-const recordSize = 16;
+const recordSize = 8;
+const cacheKey = Date.now();
 
 let count = 0;
 let pageItems = [];
@@ -51,16 +52,18 @@ function showErrorPage() {
 }
 
 async function loadCount() {
-  const response = await fetch('./src/main/bin/count.bin');
+  const response = await fetch(`./src/main/res/counts.bin?cache=${cacheKey}`, {
+    cache: 'no-store',
+  });
 
   if (!response.ok) {
-    throw new Error(`Cannot load count.bin: ${response.status}`);
+    throw new Error(`Cannot load counts.bin: ${response.status}`);
   }
 
   const buffer = await response.arrayBuffer();
 
   if (buffer.byteLength !== 8) {
-    throw new Error(`Invalid count.bin size: ${buffer.byteLength}`);
+    throw new Error(`Invalid counts.bin size: ${buffer.byteLength}`);
   }
 
   const view = new DataView(buffer);
@@ -73,7 +76,8 @@ async function loadCount() {
 
 async function loadPageItems() {
   const { byteStart, byteEnd } = getPageBounds();
-  const response = await fetch('./src/main/bin/db.bin', {
+  const response = await fetch(`./src/main/res/db.bin?cache=${cacheKey}`, {
+    cache: 'no-store',
     headers: {
       Range: `bytes=${byteStart}-${byteEnd}`,
     },
@@ -113,28 +117,22 @@ function parseRecords(buffer) {
 
   for (let offset = 0; offset < buffer.byteLength; offset += recordSize) {
     records.push({
-      id: parseUuid(view, offset),
-      time: Number(view.getBigUint64(offset, false)),
+      id: parseId(view, offset),
+      time: view.getUint32(offset, false),
     });
   }
 
   return records;
 }
 
-function parseUuid(view, offset) {
+function parseId(view, offset) {
   const bytes = [];
 
-  for (let i = 0; i < 16; i += 1) {
+  for (let i = 0; i < 8; i += 1) {
     bytes.push(view.getUint8(offset + i).toString(16).padStart(2, '0'));
   }
 
-  return [
-    bytes.slice(0, 4).join(''),
-    bytes.slice(4, 6).join(''),
-    bytes.slice(6, 8).join(''),
-    bytes.slice(8, 10).join(''),
-    bytes.slice(10, 16).join(''),
-  ].join('-');
+  return bytes.join('');
 }
 
 function renderPage() {
@@ -142,7 +140,7 @@ function renderPage() {
 
   for (const item of pageItems) {
     const image = document.createElement('img');
-    image.src = `./src/main/res/${item.id}.img`;
+    image.src = `./src/main/res/${item.id}.jpg`;
     image.alt = item.id;
     image.loading = 'lazy';
 
