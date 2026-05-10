@@ -29,14 +29,14 @@ jobs:
        'git config user.email "github-actions@github.com"'
        'TIMESTAMP=$(TZ=utc date +%s%3N)
         TIMESTAMP_HEX="$(printf "%016x" $TIMESTAMP)"
-        COUNTER="$(xxd -p -c 8 src/main/bin/counts.bin)"
+        COUNTER="$(xxd -p -c 8 src/main/res/counts.bin)"
         COUNT=$((16#${COUNTER:0:8} + 1))
         COUNTER=$((16#${COUNTER:8:8} + 1))
         UUID="$(printf "${TIMESTAMP_HEX:0:8}-${TIMESTAMP_HEX:8:4}-${TIMESTAMP_HEX:12:4}-0000-0000%08x" $COUNTER)"
         curl -m 8 https://cataas.com/cat -o "src/main/res/${UUID}.jpg" \
          && [[ "$(file --mime-type -b "src/main/res/${UUID}.jpg")" == "image/jpeg" ]] \
-         && printf "%08x%08x" $COUNT $COUNTER | xxd -p -r > src/main/bin/counts.bin \
-         && printf "%016x%08x%08x" $TIMESTAMP 0 $COUNTER | xxd -p -r >> src/main/bin/db.bin'
+         && printf "%08x%08x" $COUNT $COUNTER | xxd -p -r > src/main/res/counts.bin \
+         && printf "%016x%08x%08x" $TIMESTAMP 0 $COUNTER | xxd -p -r >> src/main/res/db.bin'
        'git add .'
        'git commit -m "new img"'
        "git push origin 'HEAD:${REMOTE_BRANCH}'"

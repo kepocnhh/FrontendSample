@@ -52,7 +52,7 @@ function showErrorPage() {
 }
 
 async function loadCount() {
-  const response = await fetch(`./src/main/bin/counts.bin?cache=${cacheKey}`, {
+  const response = await fetch(`./src/main/res/counts.bin?cache=${cacheKey}`, {
     cache: 'no-store',
   });
 
@@ -76,7 +76,7 @@ async function loadCount() {
 
 async function loadPageItems() {
   const { byteStart, byteEnd } = getPageBounds();
-  const response = await fetch(`./src/main/bin/db.bin?cache=${cacheKey}`, {
+  const response = await fetch(`./src/main/res/db.bin?cache=${cacheKey}`, {
     cache: 'no-store',
     headers: {
       Range: `bytes=${byteStart}-${byteEnd}`,
