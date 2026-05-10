@@ -45,9 +45,7 @@ printf '%08x%08x' $TIMESTAMP $COUNTER | xxd -p -r >> "${ISSUER}"
 if test $? -ne 0; then
  echo 'Database error!'; exit 1; fi
 
-git add . \
- && git commit -m "new img ${IMAGE_ID}.jpg" \
- && git push origin "HEAD:${REMOTE_BRANCH}"
+git add . && git commit -m "new img ${IMAGE_ID}.jpg"
 
 if test $? -ne 0; then
- echo 'Push error!'; exit 1; fi
+ echo 'Commit error!'; exit 1; fi

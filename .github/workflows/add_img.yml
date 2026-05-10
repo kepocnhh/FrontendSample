@@ -16,28 +16,16 @@ jobs:
       REMOTE_BRANCH: "${{github.event.ref}}"
      run: |
       docker run \
-       -e VCS_PAT='${VCS_PAT}' \
+       -e VCS_PAT="${VCS_PAT}" \
        -id --name container 'docker.io/kepocnhh/debian-trixie-amd64:11a'
       WORK_DIR="/usr/local/src/${REPOSITORY_OWNER}/${REPOSITORY_NAME}"
       docker exec container /usr/local/bin/bash -c "mkdir -p '${WORK_DIR}'"
       COMMANDS=(
-       'git init'
-       "git remote add origin 'https://${VCS_PAT}@github.com/${REPOSITORY_OWNER}/${REPOSITORY_NAME}.git'"
-       "git fetch origin '${REMOTE_BRANCH}'"
-       'git checkout -b x FETCH_HEAD'
+       "git init && git remote add origin 'https://${VCS_PAT}@github.com/${REPOSITORY_OWNER}/${REPOSITORY_NAME}.git'"
+       "git fetch origin '${REMOTE_BRANCH}' && git checkout -b x FETCH_HEAD"
        './src/main/sh/config.sh'
-       'TIMESTAMP=$(TZ=utc date +%s)
-        COUNTER="$(xxd -p -c 8 src/main/res/counts.bin)"
-        COUNT=$((16#${COUNTER:0:8} + 1))
-        COUNTER=$((16#${COUNTER:8:8} + 1))
-        IMAGE_ID="$(printf "%08x%08x" $TIMESTAMP $COUNTER)"
-        curl -m 8 https://cataas.com/cat -o "src/main/res/${IMAGE_ID}.jpg" \
-         && [[ "$(file --mime-type -b "src/main/res/${IMAGE_ID}.jpg")" == "image/jpeg" ]] \
-         && printf "%08x%08x" $COUNT $COUNTER | xxd -p -r > src/main/res/counts.bin \
-         && printf "%08x%08x" $TIMESTAMP $COUNTER | xxd -p -r >> src/main/res/db.bin \
-         && git add . \
-         && git commit -m "new img ${IMAGE_ID}.jpg"'
-       "git push origin 'HEAD:${REMOTE_BRANCH}'"
+       './src/main/sh/add_img.sh'
+       "git push origin HEAD:${REMOTE_BRANCH}"
       )
       for COMMAND in "${COMMANDS[@]}"; do
        docker exec -w "${WORK_DIR}" container /usr/local/bin/bash -c "${COMMAND}"
