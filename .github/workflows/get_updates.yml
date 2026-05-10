@@ -1,0 +1,34 @@
+on:
+ workflow_dispatch:
+
+concurrency:
+ group: get_updates
+ cancel-in-progress: false
+
+jobs:
+ build:
+  runs-on: ubuntu-24.04
+  steps:
+   - env:
+      REPOSITORY_OWNER: "${{github.event.repository.owner.login}}"
+      REPOSITORY_NAME: "${{github.event.repository.name}}"
+      VCS_PAT: "${{secrets.VCS_PAT}}"
+      REMOTE_BRANCH: "${{github.event.ref}}"
+     run: |
+      docker run \
+       -e VCS_PAT="${VCS_PAT}" \
+       -id --name container 'docker.io/kepocnhh/debian-trixie-amd64:11a'
+      WORK_DIR="/usr/local/src/${REPOSITORY_OWNER}/${REPOSITORY_NAME}"
+      docker exec container /usr/local/bin/bash -c "mkdir -p '${WORK_DIR}'"
+      COMMANDS=(
+       "git init && git remote add origin 'https://${VCS_PAT}@github.com/${REPOSITORY_OWNER}/${REPOSITORY_NAME}.git'"
+       "git fetch origin '${REMOTE_BRANCH}' && git checkout -b x FETCH_HEAD"
+       './src/main/sh/config.sh'
+       './src/main/sh/get_updates.sh'
+       "git push origin HEAD:${REMOTE_BRANCH}"
+      )
+      for COMMAND in "${COMMANDS[@]}"; do
+       docker exec -w "${WORK_DIR}" container /usr/local/bin/bash -c "${COMMAND}"
+      done
+   - if: always()
+     run: docker rm -f container || true
