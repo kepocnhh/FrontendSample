@@ -34,7 +34,9 @@ elif [[ "${TG_CHECKS}" != 'true' ]]; then
  echo 'Check error!'; exit 1
 fi
 
-RESULT_LENGTH="$(yq -er '.result | length' "${ISSUER}")"
+TG_UPDATES="$(cat "${ISSUER}")"
+
+RESULT_LENGTH="$(echo "${TG_UPDATES}" | yq -er '.result | length')"
 if test "${RESULT_LENGTH}" == '0'; then
  echo 'No results'; exit 0
 elif [[ ! "${RESULT_LENGTH}" =~ ^[1-9][0-9]*$ ]]; then
@@ -42,25 +44,28 @@ elif [[ ! "${RESULT_LENGTH}" =~ ^[1-9][0-9]*$ ]]; then
 fi
 
 for (( INDEX=0; INDEX<RESULT_LENGTH; INDEX++ )); do
- ACTUAL_CHANNEL_ID="$(yq -r ".result[$INDEX].channel_post.chat.id // null" "${ISSUER}")"
+ CHANNEL_POST="$(echo "${TG_UPDATES}" | yq ".result[$INDEX].channel_post // null")"
+ if test "${CHANNEL_POST}" == 'null'; then
+  echo 'No channel post'; continue; fi
+ ACTUAL_CHANNEL_ID="$(echo "${CHANNEL_POST}" | yq -r ".chat.id // null")"
  if test "${ACTUAL_CHANNEL_ID}" != "${TG_CHANNEL_ID}"; then
   echo 'Ignoring channel'; continue; fi
- SRC_CHAT_TYPE="$(yq -r ".result[$INDEX].channel_post.forward_origin.chat.type // null" "${ISSUER}")"
+ SRC_CHAT_TYPE="$(echo "${CHANNEL_POST}" | yq -r ".forward_origin.chat.type // null")"
  if test "${SRC_CHAT_TYPE}" != 'channel'; then
   echo 'Not from channel'; continue; fi
- SRC_CHANNEL_ID="$(yq -r ".result[$INDEX].channel_post.forward_origin.chat.id // null" "${ISSUER}")"
+ SRC_CHANNEL_ID="$(echo "${CHANNEL_POST}" | yq -r ".forward_origin.chat.id // null")"
  if [[ ! "${SRC_CHANNEL_ID}" =~ ^-?[1-9][0-9]*$ ]]; then
   echo 'Wrong src channel id!'; continue; fi
- SRC_MESSAGE_ID="$(yq -r ".result[$INDEX].channel_post.forward_origin.message_id // null" "${ISSUER}")"
+ SRC_MESSAGE_ID="$(echo "${CHANNEL_POST}" | yq -r ".forward_origin.message_id // null")"
  if [[ ! "${SRC_MESSAGE_ID}" =~ ^[1-9][0-9]*$ ]]; then
   echo 'Wrong src message id!'; continue; fi
- MEDIA_GROUP_ID="$(yq -r ".result[$INDEX].channel_post.media_group_id // null" "${ISSUER}")"
+ MEDIA_GROUP_ID="$(echo "${CHANNEL_POST}" | yq -r ".media_group_id // null")"
  if [[ "${MEDIA_GROUP_ID}" != 'null' ]]; then
   echo 'It is the media group'; continue; fi
- PHOTO_LENGTH="$(yq -r "(.result[$INDEX].channel_post.photo // []) | length" "${ISSUER}")"
+ PHOTO_LENGTH="$(echo "${CHANNEL_POST}" | yq -r "(.photo // []) | length")"
  if test "${PHOTO_LENGTH}" == '0'; then
   echo 'No photos'; continue; fi
- FILE_ID="$(yq -er ".result[$INDEX].channel_post.photo[-1].file_id" "${ISSUER}")"
+ FILE_ID="$(echo "${CHANNEL_POST}" | yq -er ".photo[-1].file_id")"
  if test $? -ne 0; then
   echo 'Get file id error!'; continue; fi
  # todo
