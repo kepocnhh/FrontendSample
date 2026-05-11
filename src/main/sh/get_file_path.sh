@@ -32,7 +32,7 @@ elif [[ ! -s "${TG_OUTPUT}" ]]; then
  echo "File \"${TG_OUTPUT}\" is empty!"; exit 1
 fi
 
-TG_CHECKS="$(yq -e '.ok // false' "${TG_OUTPUT}" 2>/dev/null)"
+TG_CHECKS="$(yq -p=json -e '.ok // false' "${TG_OUTPUT}" 2>/dev/null)"
 
 if test $? -ne 0; then
  echo 'Parse error!'; exit 1

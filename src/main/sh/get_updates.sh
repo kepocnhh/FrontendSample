@@ -40,7 +40,7 @@ elif [[ ! -s "${ISSUER}" ]]; then
  echo "File \"${ISSUER}\" is empty!"; exit 1
 fi
 
-TG_CHECKS="$(yq -er '.ok // false' "${ISSUER}" 2>/dev/null)"
+TG_CHECKS="$(yq -p=json -er '.ok // false' "${ISSUER}" 2>/dev/null)"
 
 if test $? -ne 0; then
  echo 'Parse error!'; exit 1
@@ -58,7 +58,7 @@ elif [[ ! "${RESULT_LENGTH}" =~ ^[1-9][0-9]*$ ]]; then
 fi
 
 for (( INDEX=0; INDEX<RESULT_LENGTH; INDEX++ )); do
- CHANNEL_POST="$(echo "${TG_UPDATES}" | yq ".result[$INDEX].channel_post // null")"
+ CHANNEL_POST="$(echo "${TG_UPDATES}" | yq -p=json -o=json ".result[$INDEX].channel_post // null")"
  if test "${CHANNEL_POST}" == 'null'; then
   echo 'No channel post'; continue; fi
  ./src/main/sh/on_channel_post.sh "${CHANNEL_POST}"

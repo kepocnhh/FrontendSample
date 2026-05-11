@@ -24,25 +24,25 @@ CHANNEL_POST="$1"
 if test -z "${CHANNEL_POST}"; then
  echo 'Channel post is empty!'; exit 1; fi
 
-ACTUAL_CHANNEL_ID="$(echo "${CHANNEL_POST}" | yq -r ".chat.id // null")"
+ACTUAL_CHANNEL_ID="$(echo "${CHANNEL_POST}" | yq -p=json -r ".chat.id // null")"
 if test "${ACTUAL_CHANNEL_ID}" != "${TG_CHANNEL_ID}"; then
  echo 'Ignoring channel'; exit 0; fi
-SRC_CHAT_TYPE="$(echo "${CHANNEL_POST}" | yq -r ".forward_origin.chat.type // null")"
+SRC_CHAT_TYPE="$(echo "${CHANNEL_POST}" | yq -p=json -r ".forward_origin.chat.type // null")"
 if test "${SRC_CHAT_TYPE}" != 'channel'; then
  echo 'Not from channel'; exit 0; fi
-SRC_CHANNEL_ID="$(echo "${CHANNEL_POST}" | yq -r ".forward_origin.chat.id // null")"
+SRC_CHANNEL_ID="$(echo "${CHANNEL_POST}" | yq -p=json -r ".forward_origin.chat.id // null")"
 if [[ ! "${SRC_CHANNEL_ID}" =~ ^-?[1-9][0-9]*$ ]]; then
  echo 'Wrong src channel id!'; exit 1; fi
-SRC_MESSAGE_ID="$(echo "${CHANNEL_POST}" | yq -r ".forward_origin.message_id // null")"
+SRC_MESSAGE_ID="$(echo "${CHANNEL_POST}" | yq -p=json -r ".forward_origin.message_id // null")"
 if [[ ! "${SRC_MESSAGE_ID}" =~ ^[1-9][0-9]*$ ]]; then
  echo 'Wrong src message id!'; exit 1; fi
-MEDIA_GROUP_ID="$(echo "${CHANNEL_POST}" | yq -r ".media_group_id // null")"
+MEDIA_GROUP_ID="$(echo "${CHANNEL_POST}" | yq -p=json -r ".media_group_id // null")"
 if [[ "${MEDIA_GROUP_ID}" != 'null' ]]; then
  echo 'It is the media group'; exit 0; fi
-PHOTO_LENGTH="$(echo "${CHANNEL_POST}" | yq -r "(.photo // []) | length")"
+PHOTO_LENGTH="$(echo "${CHANNEL_POST}" | yq -p=json -r "(.photo // []) | length")"
 if test "${PHOTO_LENGTH}" == '0'; then
  echo 'No photos'; exit 0; fi
-FILE_ID="$(echo "${CHANNEL_POST}" | yq -er ".photo[-1].file_id")"
+FILE_ID="$(echo "${CHANNEL_POST}" | yq -p=json -er ".photo[-1].file_id")"
 if test $? -ne 0; then
  echo 'Get file id error!'; exit 1
 elif test -z "${FILE_ID}"; then
@@ -51,7 +51,7 @@ fi
 ISSUER='/tmp/file.json'
 rm "${ISSUER}"
 ./src/main/sh/get_file_path.sh "${FILE_ID}" "${ISSUER}" || exit 1
-FILE_PATH="$(yq -er ".result.file_path" "${ISSUER}")"
+FILE_PATH="$(yq -p=json -er ".result.file_path" "${ISSUER}")"
 if test $? -ne 0; then
  echo 'Get file path error!'; exit 1
 elif test -z "${FILE_PATH}"; then
