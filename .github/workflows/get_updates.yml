@@ -2,7 +2,7 @@ on:
  workflow_dispatch:
 
 concurrency:
- group: manual-image-update
+ group: get_updates
  cancel-in-progress: false
 
 jobs:
@@ -17,6 +17,9 @@ jobs:
      run: |
       docker run \
        -e VCS_PAT="${VCS_PAT}" \
+       -e TG_BOT_ID='${{secrets.TG_BOT_ID}}' \
+       -e TG_BOT_TOKEN='${{secrets.TG_BOT_TOKEN}}' \
+       -e TG_CHANNEL_ID='${{secrets.TG_CHANNEL_ID}}' \
        -id --name container 'docker.io/kepocnhh/debian-trixie-amd64:11a'
       WORK_DIR="/usr/local/src/${REPOSITORY_OWNER}/${REPOSITORY_NAME}"
       docker exec container /usr/local/bin/bash -c "mkdir -p '${WORK_DIR}'"
@@ -24,7 +27,7 @@ jobs:
        "git init && git remote add origin 'https://${VCS_PAT}@github.com/${REPOSITORY_OWNER}/${REPOSITORY_NAME}.git'"
        "git fetch origin '${REMOTE_BRANCH}' && git checkout -b x FETCH_HEAD"
        './src/main/sh/config.sh'
-       './src/main/sh/add_img.sh'
+       './src/main/sh/get_updates.sh'
        "git push origin HEAD:${REMOTE_BRANCH}"
       )
       for COMMAND in "${COMMANDS[@]}"; do
