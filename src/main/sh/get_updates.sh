@@ -50,7 +50,7 @@ fi
 
 TG_UPDATES="$(cat "${ISSUER}")"
 
-RESULT_LENGTH="$(echo "${TG_UPDATES}" | yq -p=json -er '.result | length')"
+RESULT_LENGTH="$(printf '%s' "${TG_UPDATES}" | yq -p=json -er '.result | length')"
 if test "${RESULT_LENGTH}" == '0'; then
  echo 'No results'; exit 0
 elif [[ ! "${RESULT_LENGTH}" =~ ^[1-9][0-9]*$ ]]; then
@@ -58,7 +58,7 @@ elif [[ ! "${RESULT_LENGTH}" =~ ^[1-9][0-9]*$ ]]; then
 fi
 
 for (( INDEX=0; INDEX<RESULT_LENGTH; INDEX++ )); do
- CHANNEL_POST="$(echo "${TG_UPDATES}" | yq -p=json -o=json ".result[$INDEX].channel_post // null")"
+ CHANNEL_POST="$(printf '%s' "${TG_UPDATES}" | yq -p=json -o=json ".result[$INDEX].channel_post // null")"
  if test "${CHANNEL_POST}" == 'null'; then
   echo 'No channel post'; continue; fi
  ./src/main/sh/on_channel_post.sh "${CHANNEL_POST}"
