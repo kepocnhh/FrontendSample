@@ -24,9 +24,6 @@ CHANNEL_POST="$1"
 if test -z "${CHANNEL_POST}"; then
  echo 'Channel post is empty!'; exit 1; fi
 
-ACTUAL_CHANNEL_ID="$(printf '%s' "${CHANNEL_POST}" | yq -p=json -r ".chat.id // null")"
-if test "${ACTUAL_CHANNEL_ID}" != "${TG_CHANNEL_ID}"; then
- echo 'Ignoring channel'; exit 0; fi
 SRC_CHAT_TYPE="$(printf '%s' "${CHANNEL_POST}" | yq -p=json -r ".forward_origin.chat.type // null")"
 if test "${SRC_CHAT_TYPE}" != 'channel'; then
  echo 'Not from channel'; exit 0; fi

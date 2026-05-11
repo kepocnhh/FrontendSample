@@ -61,5 +61,8 @@ for (( INDEX=0; INDEX<RESULT_LENGTH; INDEX++ )); do
  CHANNEL_POST="$(printf '%s' "${TG_UPDATES}" | yq -p=json -o=json ".result[$INDEX].channel_post // null")"
  if test "${CHANNEL_POST}" == 'null'; then
   echo 'No channel post'; continue; fi
+ ACTUAL_CHANNEL_ID="$(printf '%s' "${CHANNEL_POST}" | yq -p=json -r ".chat.id // null")"
+ if test "${ACTUAL_CHANNEL_ID}" != "${TG_CHANNEL_ID}"; then
+  echo 'Ignoring channel'; continue; fi
  ./src/main/sh/on_channel_post.sh "${CHANNEL_POST}"
 done
