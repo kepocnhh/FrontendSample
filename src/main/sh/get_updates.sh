@@ -1,10 +1,25 @@
 #!/usr/local/bin/bash
 
+SCRIPTS=(
+ './src/main/sh/get_file_path.sh'
+ './src/main/sh/download_file.sh'
+)
+for (( INDEX=0; INDEX<${#SCRIPTS[@]}; INDEX++ )); do
+ ISSUER="${SCRIPTS[INDEX]}"
+ if [[ ! -f "${ISSUER}" ]]; then
+  echo "No file \"${ISSUER}\"!"; exit 1
+ elif [[ ! -s "${ISSUER}" ]]; then
+  echo "File \"${ISSUER}\" is empty!"; exit 1
+ elif [[ ! -x "${ISSUER}" ]]; then
+  echo "File \"${ISSUER}\" is not executable!"; exit 1
+ fi
+done
+
 ARGUMENTS=(TG_BOT_ID TG_BOT_TOKEN TG_CHANNEL_ID)
 for (( INDEX=0; INDEX<${#ARGUMENTS[@]}; INDEX++ )); do
  ARGUMENT="${ARGUMENTS[INDEX]}"
  if test -z "${!ARGUMENT}"; then
-  echo "Argument \"$ARGUMENT\" is empty!"; exit $((100+INDEX)); fi
+  echo "Argument \"${ARGUMENT}\" is empty!"; exit 1; fi
 done
 
 if [[ ! "${TG_CHANNEL_ID}" =~ ^-?[1-9][0-9]*$ ]]; then
@@ -67,7 +82,23 @@ for (( INDEX=0; INDEX<RESULT_LENGTH; INDEX++ )); do
   echo 'No photos'; continue; fi
  FILE_ID="$(echo "${CHANNEL_POST}" | yq -er ".photo[-1].file_id")"
  if test $? -ne 0; then
-  echo 'Get file id error!'; continue; fi
+  echo 'Get file id error!'; continue
+ elif test -z "${FILE_ID}"; then
+  echo "File id is empty!"; continue
+ fi
+ ISSUER='/tmp/file.json'
+ rm "${ISSUER}"
+ ./src/main/sh/get_file_path.sh "${FILE_ID}" "${ISSUER}" || continue
+ FILE_PATH="$(yq -er ".result.file_path" "${ISSUER}")"
+ if test $? -ne 0; then
+  echo 'Get file path error!'; continue
+ elif test -z "${FILE_PATH}"; then
+  echo "File path is empty!"; continue
+ fi
+ ISSUER='/tmp/file.jpg'
+ ./src/main/sh/download_file.sh "${FILE_PATH}" "${ISSUER}" || continue
+ if [[ "$(file --mime-type -b "${ISSUER}")" != 'image/jpeg' ]]; then
+  echo "File \"${ISSUER}\" is not jpg!"; continue; fi
  # todo
 done
 
