@@ -63,7 +63,3 @@ for (( INDEX=0; INDEX<RESULT_LENGTH; INDEX++ )); do
   echo 'No channel post'; continue; fi
  ./src/main/sh/on_channel_post.sh "${CHANNEL_POST}"
 done
-
-# todo
-
-echo 'Not implemented!'; exit 1 # todo

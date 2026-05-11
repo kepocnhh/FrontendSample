@@ -3,6 +3,7 @@
 SCRIPTS=(
  './src/main/sh/get_file_path.sh'
  './src/main/sh/download_file.sh'
+ './src/main/sh/commit_img.sh'
 )
 for (( INDEX=0; INDEX<${#SCRIPTS[@]}; INDEX++ )); do
  ISSUER="${SCRIPTS[INDEX]}"
@@ -57,10 +58,9 @@ elif test -z "${FILE_PATH}"; then
  echo "File path is empty!"; exit 1
 fi
 ISSUER='/tmp/file.jpg'
+rm "${ISSUER}"
 ./src/main/sh/download_file.sh "${FILE_PATH}" "${ISSUER}" || exit 1
 if [[ "$(file --mime-type -b "${ISSUER}")" != 'image/jpeg' ]]; then
  echo "File \"${ISSUER}\" is not jpg!"; exit 0; fi
 
-# todo
-
-echo 'Not implemented!'; exit 1 # todo
+./src/main/sh/commit_img.sh "${ISSUER}" || exit 1
