@@ -1,8 +1,7 @@
 #!/usr/local/bin/bash
 
 SCRIPTS=(
- './src/main/sh/get_file_path.sh'
- './src/main/sh/download_file.sh'
+ './src/main/sh/on_channel_post.sh'
 )
 for (( INDEX=0; INDEX<${#SCRIPTS[@]}; INDEX++ )); do
  ISSUER="${SCRIPTS[INDEX]}"
@@ -62,44 +61,7 @@ for (( INDEX=0; INDEX<RESULT_LENGTH; INDEX++ )); do
  CHANNEL_POST="$(echo "${TG_UPDATES}" | yq ".result[$INDEX].channel_post // null")"
  if test "${CHANNEL_POST}" == 'null'; then
   echo 'No channel post'; continue; fi
- ACTUAL_CHANNEL_ID="$(echo "${CHANNEL_POST}" | yq -r ".chat.id // null")"
- if test "${ACTUAL_CHANNEL_ID}" != "${TG_CHANNEL_ID}"; then
-  echo 'Ignoring channel'; continue; fi
- SRC_CHAT_TYPE="$(echo "${CHANNEL_POST}" | yq -r ".forward_origin.chat.type // null")"
- if test "${SRC_CHAT_TYPE}" != 'channel'; then
-  echo 'Not from channel'; continue; fi
- SRC_CHANNEL_ID="$(echo "${CHANNEL_POST}" | yq -r ".forward_origin.chat.id // null")"
- if [[ ! "${SRC_CHANNEL_ID}" =~ ^-?[1-9][0-9]*$ ]]; then
-  echo 'Wrong src channel id!'; continue; fi
- SRC_MESSAGE_ID="$(echo "${CHANNEL_POST}" | yq -r ".forward_origin.message_id // null")"
- if [[ ! "${SRC_MESSAGE_ID}" =~ ^[1-9][0-9]*$ ]]; then
-  echo 'Wrong src message id!'; continue; fi
- MEDIA_GROUP_ID="$(echo "${CHANNEL_POST}" | yq -r ".media_group_id // null")"
- if [[ "${MEDIA_GROUP_ID}" != 'null' ]]; then
-  echo 'It is the media group'; continue; fi
- PHOTO_LENGTH="$(echo "${CHANNEL_POST}" | yq -r "(.photo // []) | length")"
- if test "${PHOTO_LENGTH}" == '0'; then
-  echo 'No photos'; continue; fi
- FILE_ID="$(echo "${CHANNEL_POST}" | yq -er ".photo[-1].file_id")"
- if test $? -ne 0; then
-  echo 'Get file id error!'; continue
- elif test -z "${FILE_ID}"; then
-  echo "File id is empty!"; continue
- fi
- ISSUER='/tmp/file.json'
- rm "${ISSUER}"
- ./src/main/sh/get_file_path.sh "${FILE_ID}" "${ISSUER}" || continue
- FILE_PATH="$(yq -er ".result.file_path" "${ISSUER}")"
- if test $? -ne 0; then
-  echo 'Get file path error!'; continue
- elif test -z "${FILE_PATH}"; then
-  echo "File path is empty!"; continue
- fi
- ISSUER='/tmp/file.jpg'
- ./src/main/sh/download_file.sh "${FILE_PATH}" "${ISSUER}" || continue
- if [[ "$(file --mime-type -b "${ISSUER}")" != 'image/jpeg' ]]; then
-  echo "File \"${ISSUER}\" is not jpg!"; continue; fi
- # todo
+ ./src/main/sh/on_channel_post.sh "${CHANNEL_POST}"
 done
 
 # todo
