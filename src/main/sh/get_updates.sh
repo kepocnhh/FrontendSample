@@ -50,11 +50,11 @@ fi
 
 TG_UPDATES="$(cat "${ISSUER}")"
 
-RESULT_LENGTH="$(echo "${TG_UPDATES}" | yq -er '.result | length')"
+RESULT_LENGTH="$(echo "${TG_UPDATES}" | yq -p=json -er '.result | length')"
 if test "${RESULT_LENGTH}" == '0'; then
  echo 'No results'; exit 0
 elif [[ ! "${RESULT_LENGTH}" =~ ^[1-9][0-9]*$ ]]; then
- echo 'Wrong result length!'; exit 1
+ echo "Wrong result length(${RESULT_LENGTH})!"; exit 1
 fi
 
 for (( INDEX=0; INDEX<RESULT_LENGTH; INDEX++ )); do

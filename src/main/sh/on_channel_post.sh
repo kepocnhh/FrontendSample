@@ -46,7 +46,7 @@ FILE_ID="$(echo "${CHANNEL_POST}" | yq -er ".photo[-1].file_id")"
 if test $? -ne 0; then
  echo 'Get file id error!'; exit 1
 elif test -z "${FILE_ID}"; then
- echo "File id is empty!"; exit 1
+ echo 'File id is empty!'; exit 1
 fi
 ISSUER='/tmp/file.json'
 rm "${ISSUER}"
@@ -55,7 +55,7 @@ FILE_PATH="$(yq -er ".result.file_path" "${ISSUER}")"
 if test $? -ne 0; then
  echo 'Get file path error!'; exit 1
 elif test -z "${FILE_PATH}"; then
- echo "File path is empty!"; exit 1
+ echo 'File path is empty!'; exit 1
 fi
 ISSUER='/tmp/file.jpg'
 rm "${ISSUER}"
