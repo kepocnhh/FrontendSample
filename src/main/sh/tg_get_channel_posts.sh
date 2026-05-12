@@ -24,7 +24,7 @@ CODE=$(curl -m 8 -w '%{http_code}' -o "${TG_OUTPUT}" \
 if test $? -ne 0; then
  echo 'Curl error!'; exit 1
 elif [[ "${CODE}" != '200' ]]; then
- echo 'Get file error!'; exit 1
+ echo 'Get channel posts error!'; exit 1
 elif [[ ! -f "${TG_OUTPUT}" ]]; then
  echo "No file \"${TG_OUTPUT}\"!"; exit 1
 elif [[ ! -s "${TG_OUTPUT}" ]]; then

@@ -31,6 +31,9 @@ COUNTER=$((16#${COUNTER:8:8} + 1))
 IMAGE_ID="$(printf '%08x%08x' $TIMESTAMP $COUNTER)"
 
 ISSUER="src/main/res/${IMAGE_ID}.jpg"
+if test -f "${ISSUER}"; then
+ echo "File \"${ISSUER}\" exists!"; exit 1; fi
+
 cp "${NEW_FILE}" "${ISSUER}"
 if test $? -ne 0; then
  echo 'Copy error!'; exit 1
