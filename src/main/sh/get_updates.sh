@@ -2,6 +2,7 @@
 
 SCRIPTS=(
  './src/main/sh/on_channel_post.sh'
+ './src/main/sh/tg_get_channel_posts.sh'
 )
 for (( INDEX=0; INDEX<${#SCRIPTS[@]}; INDEX++ )); do
  ISSUER="${SCRIPTS[INDEX]}"
@@ -14,7 +15,7 @@ for (( INDEX=0; INDEX<${#SCRIPTS[@]}; INDEX++ )); do
  fi
 done
 
-ARGUMENTS=(TG_BOT_ID TG_BOT_TOKEN TG_CHANNEL_ID)
+ARGUMENTS=(TG_CHANNEL_ID)
 for (( INDEX=0; INDEX<${#ARGUMENTS[@]}; INDEX++ )); do
  ARGUMENT="${ARGUMENTS[INDEX]}"
  if test -z "${!ARGUMENT}"; then
@@ -26,27 +27,7 @@ if [[ ! "${TG_CHANNEL_ID}" =~ ^-?[1-9][0-9]*$ ]]; then
 
 ISSUER='/tmp/updates.json'
 rm "${ISSUER}"
-CODE=$(curl -m 8 -w '%{http_code}' -o "${ISSUER}" \
- "https://api.telegram.org/bot${TG_BOT_ID}:${TG_BOT_TOKEN}/getUpdates" \
- --data-urlencode 'allowed_updates=["channel_post"]')
-
-if test $? -ne 0; then
- echo 'Curl error!'; exit 1
-elif [[ "${CODE}" != '200' ]]; then
- echo 'Get updates error!'; exit 1
-elif [[ ! -f "${ISSUER}" ]]; then
- echo "No file \"${ISSUER}\"!"; exit 1
-elif [[ ! -s "${ISSUER}" ]]; then
- echo "File \"${ISSUER}\" is empty!"; exit 1
-fi
-
-TG_CHECKS="$(yq -p=json -er '.ok // false' "${ISSUER}" 2>/dev/null)"
-
-if test $? -ne 0; then
- echo 'Parse error!'; exit 1
-elif [[ "${TG_CHECKS}" != 'true' ]]; then
- echo 'Check error!'; exit 1
-fi
+./src/main/sh/tg_get_channel_posts.sh "${ISSUER}" || exit 1
 
 TG_UPDATES="$(cat "${ISSUER}")"
 

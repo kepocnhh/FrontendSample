@@ -1,8 +1,8 @@
 #!/usr/local/bin/bash
 
 SCRIPTS=(
- './src/main/sh/get_file_path.sh'
- './src/main/sh/download_file.sh'
+ './src/main/sh/tg_get_file.sh'
+ './src/main/sh/tg_download_file.sh'
  './src/main/sh/commit_img.sh'
 )
 for (( INDEX=0; INDEX<${#SCRIPTS[@]}; INDEX++ )); do
@@ -47,7 +47,7 @@ elif test -z "${FILE_ID}"; then
 fi
 ISSUER='/tmp/file.json'
 rm "${ISSUER}"
-./src/main/sh/get_file_path.sh "${FILE_ID}" "${ISSUER}" || exit 1
+./src/main/sh/tg_get_file.sh "${FILE_ID}" "${ISSUER}" || exit 1
 FILE_PATH="$(yq -p=json -er ".result.file_path" "${ISSUER}")"
 if test $? -ne 0; then
  echo 'Get file path error!'; exit 1
@@ -56,7 +56,7 @@ elif test -z "${FILE_PATH}"; then
 fi
 ISSUER='/tmp/file.jpg'
 rm "${ISSUER}"
-./src/main/sh/download_file.sh "${FILE_PATH}" "${ISSUER}" || exit 1
+./src/main/sh/tg_download_file.sh "${FILE_PATH}" "${ISSUER}" || exit 1
 if [[ "$(file --mime-type -b "${ISSUER}")" != 'image/jpeg' ]]; then
  echo "File \"${ISSUER}\" is not jpg!"; exit 0; fi
 
