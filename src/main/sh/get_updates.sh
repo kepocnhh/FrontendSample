@@ -46,9 +46,8 @@ for (( INDEX=0; INDEX<RESULT_LENGTH; INDEX++ )); do
  ACTUAL_CHANNEL_ID="$(printf '%s' "${CHANNEL_POST}" | yq -p=json -r ".chat.id // null")"
  if test "${ACTUAL_CHANNEL_ID}" != "${TG_CHANNEL_ID}"; then
   echo 'Ignoring channel'; continue; fi
- NEW_FILE='/tmp/file.img'
- ./src/main/sh/on_channel_post.sh "${CHANNEL_POST}" "${NEW_FILE}"; CODE=$?
+ ./src/main/sh/on_channel_post.sh "${CHANNEL_POST}" "${INDEX}"; CODE=$?
  if test "${CODE}" == '204'; then continue
  elif test "${CODE}" != '0'; then exit 1; fi
- ./src/main/sh/commit_img.sh "${NEW_FILE}" || exit 1
+ ./src/main/sh/commit_img.sh "${INDEX}" || exit 1
 done

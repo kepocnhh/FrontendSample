@@ -3,14 +3,15 @@
 if test $# -ne 1; then
  echo 'Wrong arguments!'; exit 1; fi
 
-NEW_FILE="$1"
+NEW_FILE_ID="$1"
 
-if [[ ! -f "${NEW_FILE}" ]]; then
- echo "No file \"${NEW_FILE}\"!"; exit 1
-elif [[ ! -s "${NEW_FILE}" ]]; then
- echo "File \"${NEW_FILE}\" is empty!"; exit 1
-elif [[ "$(file --mime-type -b "${NEW_FILE}")" != 'image/jpeg' ]]; then
- echo "File \"${NEW_FILE}\" is not jpg!"; exit 1
+ISSUER="/tmp/file_${NEW_FILE_ID}.img"
+if [[ ! -f "${ISSUER}" ]]; then
+ echo "No file \"${ISSUER}\"!"; exit 1
+elif [[ ! -s "${ISSUER}" ]]; then
+ echo "File \"${ISSUER}\" is empty!"; exit 1
+elif [[ "$(file --mime-type -b "${ISSUER}")" != 'image/jpeg' ]]; then
+ echo "File \"${ISSUER}\" is not jpg!"; exit 1
 fi
 
 TIMESTAMP=$(TZ=utc date +%s)
@@ -34,7 +35,7 @@ ISSUER="src/main/res/${IMAGE_ID}.jpg"
 if test -f "${ISSUER}"; then
  echo "File \"${ISSUER}\" exists!"; exit 1; fi
 
-cp "${NEW_FILE}" "${ISSUER}"
+cp "/tmp/file_${NEW_FILE_ID}.img" "${ISSUER}"
 if test $? -ne 0; then
  echo 'Copy error!'; exit 1
 elif [[ ! -f "${ISSUER}" ]]; then

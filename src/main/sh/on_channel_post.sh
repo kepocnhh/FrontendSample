@@ -19,9 +19,9 @@ if test $# -ne 2; then
  echo 'Wrong arguments!'; exit 1; fi
 
 CHANNEL_POST="$1"
-NEW_FILE="$2"
+NEW_FILE_ID="$2"
 
-ARGUMENTS=(CHANNEL_POST NEW_FILE TG_CHANNEL_ID)
+ARGUMENTS=(CHANNEL_POST NEW_FILE_ID TG_CHANNEL_ID)
 for (( INDEX=0; INDEX<${#ARGUMENTS[@]}; INDEX++ )); do
  ARGUMENT="${ARGUMENTS[INDEX]}"
  if test -z "${!ARGUMENT}"; then
@@ -62,8 +62,14 @@ elif test -z "${FILE_PATH}"; then
  echo 'File path is empty!'; exit 1
 fi
 
-ISSUER="${NEW_FILE}"
+ISSUER="/tmp/file_${NEW_FILE_ID}.img"
 rm "${ISSUER}"
 ./src/main/sh/tg_download_file.sh "${FILE_PATH}" "${ISSUER}" || exit 1
 if [[ "$(file --mime-type -b "${ISSUER}")" != 'image/jpeg' ]]; then
  echo "File \"${ISSUER}\" is not jpg!"; exit 204; fi
+
+ISSUER="/tmp/file_${NEW_FILE_ID}.yml"
+echo "
+origin_id: ${SRC_CHANNEL_ID}
+message_id: ${SRC_MESSAGE_ID}
+" > "${ISSUER}"
