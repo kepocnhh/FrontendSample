@@ -58,7 +58,14 @@ else
   echo "Sort \"${ISSUER}\" error!"; exit 1; fi
 fi
 
-TIMESTAMP=$(TZ=utc date +%s)
+SAVED_TIME=$(TZ=utc date +%s)
+if test $? -ne 0; then
+ echo 'Get saved time error!'; exit 1
+elif [[ ! "${SAVED_TIME}" =~ ^[1-9][0-9]*$ ]]; then
+ echo 'Wrong saved time!'; exit 1
+elif test $SAVED_TIME -gt 4294967296; then
+ echo 'Wrong saved seconds!'; exit 1
+fi
 
 ISSUER='src/main/res/counts.bin'
 
@@ -73,7 +80,7 @@ fi
 COUNTER="$(xxd -p -c 8 "${ISSUER}")"
 COUNT=$((16#${COUNTER:0:8} + 1))
 COUNTER=$((16#${COUNTER:8:8} + 1))
-POST_ID="$(printf '%08x%08x' $TIMESTAMP $COUNTER)"
+POST_ID="$(printf '%08x%08x' $SAVED_TIME $COUNTER)"
 
 ISSUER="src/main/res/${POST_ID}.jpg"
 if test -f "${ISSUER}"; then
@@ -97,15 +104,24 @@ if test $? -ne 0; then
  echo 'Counts error!'; exit 1; fi
 
 ISSUER='src/main/res/db.bin'
-printf '%08x%08x' $TIMESTAMP $COUNTER | xxd -p -r >> "${ISSUER}"
+printf '%08x%08x' $SAVED_TIME $COUNTER | xxd -p -r >> "${ISSUER}"
 
 if test $? -ne 0; then
  echo 'Database error!'; exit 1; fi
 
-ISSUER="src/main/res/${POST_ID}.json"
-mv "/tmp/file_${NEW_FILE_INDEX}.json" "${ISSUER}"
+ISSUER="/tmp/file_${NEW_FILE_INDEX}.json"
+JSON_BODY="$(cat "${ISSUER}")"
 if test $? -ne 0; then
- echo "Move \"${ISSUER}\" error!"; exit 1; fi
+ echo "Read \"${ISSUER}\" error!"; exit 1; fi
+
+STR_VALUE="${POST_ID}"
+JSON_BODY="$(printf '%s' "${JSON_BODY}" | STR_VALUE="${STR_VALUE}" yq -M -p=json -o=json '.post_id=strenv(STR_VALUE)')"
+JSON_BODY="$(printf '%s' "${JSON_BODY}" | yq -M -p=json -o=json ".saved_time=${SAVED_TIME}")"
+
+ISSUER="src/main/res/${POST_ID}.json"
+printf '%s' "${JSON_BODY}" > "${ISSUER}"
+if test $? -ne 0; then
+ echo "Write \"${ISSUER}\" error!"; exit 1; fi
 
 git add . && git commit -m "new post ${POST_ID}"
 
