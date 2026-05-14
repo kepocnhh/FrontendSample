@@ -24,7 +24,7 @@ for (( INDEX=0; INDEX<${#ARGUMENTS[@]}; INDEX++ )); do
   echo "Argument \"${ARGUMENT}\" is empty!"; exit 1; fi
 done
 
-if [[ ! "${TG_CHANNEL_ID}" =~ ^-?[1-9][0-9]*$ ]]; then
+if [[ ! "${TG_CHANNEL_ID}" =~ ^-100[1-9][0-9]*$ ]]; then
  echo 'Wrong channel id!'; exit 1; fi
 
 ISSUER='/tmp/updates.json'

@@ -40,7 +40,7 @@ if test "${ORIGIN_CHAT_TYPE}" != 'channel'; then
 #
 
 ORIGIN_ID="$(printf '%s' "${CHANNEL_POST}" | yq -p=json -r '.forward_origin.chat.id // null')"
-if [[ ! "${ORIGIN_ID}" =~ ^-?[1-9][0-9]*$ ]]; then
+if [[ ! "${ORIGIN_ID}" =~ ^-100[1-9][0-9]*$ ]]; then
  echo 'Wrong origin id!'; exit 1
 elif test "${ORIGIN_ID}" == "${TG_CHANNEL_ID}"; then
  echo 'Self posted!'; exit 204; fi
@@ -106,11 +106,20 @@ if [[ "$(file --mime-type -b "${ISSUER}")" != 'image/jpeg' ]]; then
  echo "File \"${ISSUER}\" is not jpg!"; exit 204; fi
 
 ISSUER="/tmp/file_${NEW_FILE_INDEX}.json"
-echo "
-origin_id: ${ORIGIN_ID}
-origin_message_id: ${ORIGIN_MESSAGE_ID}
-origin_date: ${ORIGIN_DATE}
-forward_date: ${FORWARD_DATE}
-" | yq -p=yml -o=json > "${ISSUER}"
 
-# todo caption
+JSON_BODY="{
+\"origin_id\": ${ORIGIN_ID},
+\"origin_message_id\": ${ORIGIN_MESSAGE_ID},
+\"origin_date\": ${ORIGIN_DATE},
+\"forward_date\": ${FORWARD_DATE}
+}"
+
+STR_VALUE="${ORIGIN_CAPTION}"
+JSON_BODY="$(printf '%s' "${JSON_BODY}" | STR_VALUE="${STR_VALUE}" yq -M -p=json -o=json '.origin_caption=strenv(STR_VALUE)')"
+
+STR_VALUE="https://t.me/c/${ORIGIN_ID#-100}/${ORIGIN_MESSAGE_ID}"
+JSON_BODY="$(printf '%s' "${JSON_BODY}" | STR_VALUE="${STR_VALUE}" yq -M -p=json -o=json '.origin_link=strenv(STR_VALUE)')"
+
+printf '%s' "${JSON_BODY}" > "${ISSUER}"
+if test $? -ne 0; then
+ echo "Write \"${ISSUER}\" error!"; exit 1; fi

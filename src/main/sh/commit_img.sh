@@ -27,7 +27,7 @@ fi
 ORIGIN_ID="$(yq -p=json -er '.origin_id' "${ISSUER}")"
 if test $? -ne 0; then
  echo 'Get origin id error!'; exit 1; fi
-if [[ ! "${ORIGIN_ID}" =~ ^-?[1-9][0-9]*$ ]]; then
+if [[ ! "${ORIGIN_ID}" =~ ^-100[1-9][0-9]*$ ]]; then
  echo 'Wrong origin id!'; exit 1
 fi
 
