@@ -3,9 +3,12 @@
 if test $# -ne 1; then
  echo 'Wrong arguments!'; exit 1; fi
 
-NEW_FILE_ID="$1"
+NEW_FILE_INDEX="$1"
 
-ISSUER="/tmp/file_${NEW_FILE_ID}.img"
+if [[ ! "${NEW_FILE_INDEX}" =~ ^(0|[1-9][0-9]*)$ ]]; then
+ echo 'Wrong index!'; exit 1; fi
+
+ISSUER="/tmp/file_${NEW_FILE_INDEX}.img"
 if [[ ! -f "${ISSUER}" ]]; then
  echo "No file \"${ISSUER}\"!"; exit 1
 elif [[ ! -s "${ISSUER}" ]]; then
@@ -14,7 +17,7 @@ elif [[ "$(file --mime-type -b "${ISSUER}")" != 'image/jpeg' ]]; then
  echo "File \"${ISSUER}\" is not jpg!"; exit 1
 fi
 
-ISSUER="/tmp/file_${NEW_FILE_ID}.json"
+ISSUER="/tmp/file_${NEW_FILE_INDEX}.json"
 if [[ ! -f "${ISSUER}" ]]; then
  echo "No file \"${ISSUER}\"!"; exit 1
 elif [[ ! -s "${ISSUER}" ]]; then
@@ -70,15 +73,15 @@ fi
 COUNTER="$(xxd -p -c 8 "${ISSUER}")"
 COUNT=$((16#${COUNTER:0:8} + 1))
 COUNTER=$((16#${COUNTER:8:8} + 1))
-IMAGE_ID="$(printf '%08x%08x' $TIMESTAMP $COUNTER)"
+POST_ID="$(printf '%08x%08x' $TIMESTAMP $COUNTER)"
 
-ISSUER="src/main/res/${IMAGE_ID}.jpg"
+ISSUER="src/main/res/${POST_ID}.jpg"
 if test -f "${ISSUER}"; then
  echo "File \"${ISSUER}\" exists!"; exit 1; fi
 
-cp "/tmp/file_${NEW_FILE_ID}.img" "${ISSUER}"
+cp "/tmp/file_${NEW_FILE_INDEX}.img" "${ISSUER}"
 if test $? -ne 0; then
- echo 'Copy error!'; exit 1
+ echo "Copy \"${ISSUER}\" error!"; exit 1
 elif [[ ! -f "${ISSUER}" ]]; then
  echo "No file \"${ISSUER}\"!"; exit 1
 elif [[ ! -s "${ISSUER}" ]]; then
@@ -99,7 +102,12 @@ printf '%08x%08x' $TIMESTAMP $COUNTER | xxd -p -r >> "${ISSUER}"
 if test $? -ne 0; then
  echo 'Database error!'; exit 1; fi
 
-git add . && git commit -m "new img ${IMAGE_ID}.jpg"
+ISSUER="src/main/res/${POST_ID}.json"
+mv "/tmp/file_${NEW_FILE_INDEX}.json" "${ISSUER}"
+if test $? -ne 0; then
+ echo "Move \"${ISSUER}\" error!"; exit 1; fi
+
+git add . && git commit -m "new post ${POST_ID}"
 
 if test $? -ne 0; then
  echo 'Commit error!'; exit 1; fi
