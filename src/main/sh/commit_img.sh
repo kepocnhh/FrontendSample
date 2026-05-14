@@ -50,7 +50,7 @@ else
  printf '%016x%016x' $ORIGIN_ID $MESSAGE_ID | xxd -p -r >> '/tmp/ids.bin'
  if test $? -ne 0; then
   echo 'Add ids error!'; exit 1; fi
- hexdump -v -e '16/1 "%02x" "\n"' '/tmp/ids.bin' | sort | xxd -r -p > "${ISSUER}"
+ hexdump -v -e '16/1 "%02x" "\n"' '/tmp/ids.bin' | LC_ALL=C sort | xxd -r -p > "${ISSUER}"
  if test $? -ne 0; then
   echo "Sort \"${ISSUER}\" error!"; exit 1; fi
 fi
