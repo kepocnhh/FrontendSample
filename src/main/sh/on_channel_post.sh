@@ -30,30 +30,46 @@ for (( INDEX=0; INDEX<${#ARGUMENTS[@]}; INDEX++ )); do
   echo "Argument \"${ARGUMENT}\" is empty!"; exit 1; fi
 done
 
-SRC_CHAT_TYPE="$(printf '%s' "${CHANNEL_POST}" | yq -p=json -r '.forward_origin.chat.type // null')"
-if test "${SRC_CHAT_TYPE}" != 'channel'; then
+ORIGIN_CHAT_TYPE="$(printf '%s' "${CHANNEL_POST}" | yq -p=json -r '.forward_origin.chat.type // null')"
+if test "${ORIGIN_CHAT_TYPE}" != 'channel'; then
  echo 'Not from channel'; exit 204; fi
 
 #
 
-SRC_CHANNEL_ID="$(printf '%s' "${CHANNEL_POST}" | yq -p=json -r '.forward_origin.chat.id // null')"
-if [[ ! "${SRC_CHANNEL_ID}" =~ ^-?[1-9][0-9]*$ ]]; then
- echo 'Wrong src channel id!'; exit 1
-elif test "${SRC_CHANNEL_ID}" == "${TG_CHANNEL_ID}"; then
+ORIGIN_ID="$(printf '%s' "${CHANNEL_POST}" | yq -p=json -r '.forward_origin.chat.id // null')"
+if [[ ! "${ORIGIN_ID}" =~ ^-?[1-9][0-9]*$ ]]; then
+ echo 'Wrong origin id!'; exit 1
+elif test "${ORIGIN_ID}" == "${TG_CHANNEL_ID}"; then
  echo 'Self posted!'; exit 204; fi
-SRC_MESSAGE_ID="$(printf '%s' "${CHANNEL_POST}" | yq -p=json -r '.forward_origin.message_id // null')"
-if [[ ! "${SRC_MESSAGE_ID}" =~ ^[1-9][0-9]*$ ]]; then
- echo 'Wrong src message id!'; exit 1; fi
+ORIGIN_MESSAGE_ID="$(printf '%s' "${CHANNEL_POST}" | yq -p=json -r '.forward_origin.message_id // null')"
+if [[ ! "${ORIGIN_MESSAGE_ID}" =~ ^[1-9][0-9]*$ ]]; then
+ echo 'Wrong origin message id!'; exit 1; fi
 
 ISSUER='src/main/res/ids.bin'
-TARGET_HEX="$(printf '%016x%016x' $SRC_CHANNEL_ID $SRC_MESSAGE_ID)"
+TARGET_HEX="$(printf '%016x%016x' $ORIGIN_ID $ORIGIN_MESSAGE_ID)"
 FOUND_INDEX="$($scripts/binary_search.sh "${ISSUER}" 16 "${TARGET_HEX}" 'C')"
 if test $? -ne 0; then
  echo 'Search id error!'; exit 1
 elif [[ ! "${FOUND_INDEX}" =~ ^(-1|0|[1-9][0-9]*)$ ]]; then
  echo 'Wrong index!' >&2; exit 1
 elif test $FOUND_INDEX -ge 0; then
- echo "Ids ${SRC_CHANNEL_ID}/${SRC_MESSAGE_ID} found"; exit 204; fi
+ echo "Ids ${ORIGIN_ID}/${ORIGIN_MESSAGE_ID} found"; exit 204; fi
+
+ORIGIN_DATE="$(printf '%s' "${CHANNEL_POST}" | yq -p=json -er '.forward_origin.date')"
+if test $? -ne 0; then
+ echo 'Get origin date error!'; exit 1
+elif [[ ! "${ORIGIN_DATE}" =~ ^[1-9][0-9]*$ ]]; then
+ echo 'Wrong origin date!'; exit 1
+fi
+
+FORWARD_DATE="$(printf '%s' "${CHANNEL_POST}" | yq -p=json -er '.date')"
+if test $? -ne 0; then
+ echo 'Get forward date error!'; exit 1
+elif [[ ! "${FORWARD_DATE}" =~ ^[1-9][0-9]*$ ]]; then
+ echo 'Wrong forward date!'; exit 1
+fi
+
+ORIGIN_CAPTION="$(printf '%s' "${CHANNEL_POST}" | yq -p=json -r '.caption // ""')"
 
 #
 
@@ -86,8 +102,12 @@ $scripts/tg_download_file.sh "${FILE_PATH}" "${ISSUER}" || exit 1
 if [[ "$(file --mime-type -b "${ISSUER}")" != 'image/jpeg' ]]; then
  echo "File \"${ISSUER}\" is not jpg!"; exit 204; fi
 
-ISSUER="/tmp/file_${NEW_FILE_ID}.yml"
+ISSUER="/tmp/file_${NEW_FILE_ID}.json"
 echo "
-origin_id: ${SRC_CHANNEL_ID}
-message_id: ${SRC_MESSAGE_ID}
-" > "${ISSUER}"
+origin_id: ${ORIGIN_ID}
+origin_message_id: ${ORIGIN_MESSAGE_ID}
+origin_date: ${ORIGIN_DATE}
+forward_date: ${FORWARD_DATE}
+" | yq -p=yml -o=json > "${ISSUER}"
+
+# todo caption

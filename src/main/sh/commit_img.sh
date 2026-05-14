@@ -14,30 +14,30 @@ elif [[ "$(file --mime-type -b "${ISSUER}")" != 'image/jpeg' ]]; then
  echo "File \"${ISSUER}\" is not jpg!"; exit 1
 fi
 
-ISSUER="/tmp/file_${NEW_FILE_ID}.yml"
+ISSUER="/tmp/file_${NEW_FILE_ID}.json"
 if [[ ! -f "${ISSUER}" ]]; then
  echo "No file \"${ISSUER}\"!"; exit 1
 elif [[ ! -s "${ISSUER}" ]]; then
  echo "File \"${ISSUER}\" is empty!"; exit 1
 fi
 
-ORIGIN_ID="$(yq -p=yml -er '.origin_id' "${ISSUER}")"
+ORIGIN_ID="$(yq -p=json -er '.origin_id' "${ISSUER}")"
 if test $? -ne 0; then
  echo 'Get origin id error!'; exit 1; fi
 if [[ ! "${ORIGIN_ID}" =~ ^-?[1-9][0-9]*$ ]]; then
  echo 'Wrong origin id!'; exit 1
 fi
 
-MESSAGE_ID="$(yq -p=yml -er '.message_id' "${ISSUER}")"
+ORIGIN_MESSAGE_ID="$(yq -p=json -er '.origin_message_id' "${ISSUER}")"
 if test $? -ne 0; then
- echo 'Get message id error!'; exit 1; fi
-if [[ ! "${MESSAGE_ID}" =~ ^[1-9][0-9]*$ ]]; then
- echo 'Wrong message id!'; exit 1
+ echo 'Get origin message id error!'; exit 1; fi
+if [[ ! "${ORIGIN_MESSAGE_ID}" =~ ^[1-9][0-9]*$ ]]; then
+ echo 'Wrong origin message id!'; exit 1
 fi
 
 ISSUER='src/main/res/ids.bin'
 if [[ ! -f "${ISSUER}" || ! -s "${ISSUER}" ]]; then
- printf '%016x%016x' $ORIGIN_ID $MESSAGE_ID | xxd -p -r > "${ISSUER}"
+ printf '%016x%016x' $ORIGIN_ID $ORIGIN_MESSAGE_ID | xxd -p -r > "${ISSUER}"
  if test $? -ne 0; then
   echo "Add ids \"${ISSUER}\" error!"; exit 1; fi
 else
@@ -47,7 +47,7 @@ else
  cp "${ISSUER}" '/tmp/ids.bin'
  if test $? -ne 0; then
   echo "Copy \"${ISSUER}\" error!"; exit 1; fi
- printf '%016x%016x' $ORIGIN_ID $MESSAGE_ID | xxd -p -r >> '/tmp/ids.bin'
+ printf '%016x%016x' $ORIGIN_ID $ORIGIN_MESSAGE_ID | xxd -p -r >> '/tmp/ids.bin'
  if test $? -ne 0; then
   echo 'Add ids error!'; exit 1; fi
  hexdump -v -e '16/1 "%02x" "\n"' '/tmp/ids.bin' | LC_ALL=C sort | xxd -r -p > "${ISSUER}"
