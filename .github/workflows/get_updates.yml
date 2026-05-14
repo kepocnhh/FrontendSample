@@ -17,6 +17,9 @@ jobs:
      run: |
       docker run \
        -e VCS_PAT="${VCS_PAT}" \
+       -e TG_BOT_ID='${{secrets.TG_BOT_ID}}' \
+       -e TG_BOT_TOKEN='${{secrets.TG_BOT_TOKEN}}' \
+       -e TG_CHANNEL_ID='${{secrets.TG_CHANNEL_ID}}' \
        -id --name container 'docker.io/kepocnhh/debian-trixie-amd64:11a'
       WORK_DIR="/usr/local/src/${REPOSITORY_OWNER}/${REPOSITORY_NAME}"
       docker exec container /usr/local/bin/bash -c "mkdir -p '${WORK_DIR}'"
