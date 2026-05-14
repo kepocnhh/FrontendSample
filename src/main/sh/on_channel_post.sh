@@ -1,6 +1,7 @@
 #!/usr/local/bin/bash
 
 SCRIPTS=(
+ './src/main/sh/binary_search.sh'
  './src/main/sh/tg_get_file.sh'
  './src/main/sh/tg_download_file.sh'
 )
@@ -43,33 +44,15 @@ SRC_MESSAGE_ID="$(printf '%s' "${CHANNEL_POST}" | yq -p=json -r '.forward_origin
 if [[ ! "${SRC_MESSAGE_ID}" =~ ^[1-9][0-9]*$ ]]; then
  echo 'Wrong src message id!'; exit 1; fi
 
-unset OLD_LC_ALL; if [[ -n "${LC_ALL+x}" ]]; then
- OLD_LC_ALL="${LC_ALL}"; fi; LC_ALL=C
-
 ISSUER='src/main/res/ids.bin'
-if test -s "${ISSUER}"; then
- IDS_SIZE="$(wc -c < "${ISSUER}")"
- if [[ "${IDS_SIZE}" -ne 0 && $((IDS_SIZE % 16)) -ne 0 ]]; then
-  echo "File \"${ISSUER}\" size is not multiple of 16 bytes!"; exit 1; fi
- LOW=0
- HIGH=$((IDS_SIZE / 16 - 1))
- FOUND_INDEX=-1
- TARGET_HEX="$(printf '%016x%016x' $SRC_CHANNEL_ID $SRC_MESSAGE_ID)"
- while [ $LOW -le $HIGH ]; do
-  MID=$(((LOW + HIGH) / 2))
-  CURRENT_HEX=$(dd if="${ISSUER}" bs=16 count=1 skip=$MID 2>/dev/null | xxd -p | tr -d '\n')
-  if test "${CURRENT_HEX}" == "${TARGET_HEX}"; then
-   FOUND_INDEX=$MID; break
-  elif [[ "${CURRENT_HEX}" < "${TARGET_HEX}" ]]; then
-   LOW=$((MID + 1)); else
-   HIGH=$((MID - 1)); fi
- done
- if test $FOUND_INDEX -ge 0; then
-  echo "Ids ${SRC_CHANNEL_ID}/${SRC_MESSAGE_ID} found"; exit 204; fi
-fi
-
-if [[ -n "${OLD_LC_ALL+x}" ]]; then
- LC_ALL="${OLD_LC_ALL}"; else unset LC_ALL; fi
+TARGET_HEX="$(printf '%016x%016x' $SRC_CHANNEL_ID $SRC_MESSAGE_ID)"
+FOUND_INDEX="$(./src/main/sh/binary_search.sh "${ISSUER}" 16 "${TARGET_HEX}" 'C')"
+if test $? -ne 0; then
+ echo 'Search id error!'; exit 1
+elif [[ ! "${FOUND_INDEX}" =~ ^(-1|0|[1-9][0-9]*)$ ]]; then
+ echo 'Wrong index!' >&2; exit 1
+elif test $FOUND_INDEX -ge 0; then
+ echo "Ids ${SRC_CHANNEL_ID}/${SRC_MESSAGE_ID} found"; exit 204; fi
 
 #
 
