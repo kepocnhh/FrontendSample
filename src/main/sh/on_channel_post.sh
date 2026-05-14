@@ -1,12 +1,13 @@
 #!/usr/local/bin/bash
 
-SCRIPTS=(
- './src/main/sh/binary_search.sh'
- './src/main/sh/tg_get_file.sh'
- './src/main/sh/tg_download_file.sh'
+scripts='./src/main/sh'
+NAMES=(
+ 'binary_search.sh'
+ 'tg_get_file.sh'
+ 'tg_download_file.sh'
 )
-for (( INDEX=0; INDEX<${#SCRIPTS[@]}; INDEX++ )); do
- ISSUER="${SCRIPTS[INDEX]}"
+for (( INDEX=0; INDEX<${#NAMES[@]}; INDEX++ )); do
+ ISSUER="$scripts/${NAMES[INDEX]}"
  if [[ ! -f "${ISSUER}" ]]; then
   echo "No file \"${ISSUER}\"!"; exit 1
  elif [[ ! -s "${ISSUER}" ]]; then
@@ -46,7 +47,7 @@ if [[ ! "${SRC_MESSAGE_ID}" =~ ^[1-9][0-9]*$ ]]; then
 
 ISSUER='src/main/res/ids.bin'
 TARGET_HEX="$(printf '%016x%016x' $SRC_CHANNEL_ID $SRC_MESSAGE_ID)"
-FOUND_INDEX="$(./src/main/sh/binary_search.sh "${ISSUER}" 16 "${TARGET_HEX}" 'C')"
+FOUND_INDEX="$($scripts/binary_search.sh "${ISSUER}" 16 "${TARGET_HEX}" 'C')"
 if test $? -ne 0; then
  echo 'Search id error!'; exit 1
 elif [[ ! "${FOUND_INDEX}" =~ ^(-1|0|[1-9][0-9]*)$ ]]; then
@@ -71,7 +72,7 @@ fi
 
 ISSUER='/tmp/file.json'
 rm "${ISSUER}"
-./src/main/sh/tg_get_file.sh "${FILE_ID}" "${ISSUER}" || exit 1
+$scripts/tg_get_file.sh "${FILE_ID}" "${ISSUER}" || exit 1
 FILE_PATH="$(yq -p=json -er ".result.file_path" "${ISSUER}")"
 if test $? -ne 0; then
  echo 'Get file path error!'; exit 1
@@ -81,7 +82,7 @@ fi
 
 ISSUER="/tmp/file_${NEW_FILE_ID}.img"
 rm "${ISSUER}"
-./src/main/sh/tg_download_file.sh "${FILE_PATH}" "${ISSUER}" || exit 1
+$scripts/tg_download_file.sh "${FILE_PATH}" "${ISSUER}" || exit 1
 if [[ "$(file --mime-type -b "${ISSUER}")" != 'image/jpeg' ]]; then
  echo "File \"${ISSUER}\" is not jpg!"; exit 204; fi
 
