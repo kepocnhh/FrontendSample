@@ -35,6 +35,26 @@ if [[ ! "${MESSAGE_ID}" =~ ^[1-9][0-9]*$ ]]; then
  echo 'Wrong message id!'; exit 1
 fi
 
+ISSUER='src/main/res/ids.bin'
+if [[ ! -f "${ISSUER}" || ! -s "${ISSUER}" ]]; then
+ printf '%016x%016x' $ORIGIN_ID $MESSAGE_ID | xxd -p -r > "${ISSUER}"
+ if test $? -ne 0; then
+  echo "Add ids \"${ISSUER}\" error!"; exit 1; fi
+else
+ IDS_SIZE="$(wc -c < "${ISSUER}")"
+ if [[ "${IDS_SIZE}" -ne 0 && $((IDS_SIZE % 16)) -ne 0 ]]; then
+  echo "File \"${ISSUER}\" size is not multiple of 16 bytes!"; exit 1; fi
+ cp "${ISSUER}" '/tmp/ids.bin'
+ if test $? -ne 0; then
+  echo "Copy \"${ISSUER}\" error!"; exit 1; fi
+ printf '%016x%016x' $ORIGIN_ID $MESSAGE_ID | xxd -p -r >> '/tmp/ids.bin'
+ if test $? -ne 0; then
+  echo 'Add ids error!'; exit 1; fi
+ hexdump -v -e '16/1 "%02x" "\n"' '/tmp/ids.bin' | sort | xxd -r -p > "${ISSUER}"
+ if test $? -ne 0; then
+  echo "Sort \"${ISSUER}\" error!"; exit 1; fi
+fi
+
 TIMESTAMP=$(TZ=utc date +%s)
 
 ISSUER='src/main/res/counts.bin'
@@ -78,10 +98,6 @@ printf '%08x%08x' $TIMESTAMP $COUNTER | xxd -p -r >> "${ISSUER}"
 
 if test $? -ne 0; then
  echo 'Database error!'; exit 1; fi
-
-mv "${IDS_TMP_FILE}" "${IDS_FILE}"
-if test $? -ne 0; then
- echo 'Ids error!'; exit 1; fi
 
 git add . && git commit -m "new img ${IMAGE_ID}.jpg"
 
