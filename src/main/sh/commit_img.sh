@@ -63,7 +63,7 @@ if test $? -ne 0; then
  echo 'Get saved time error!'; exit 1
 elif [[ ! "${SAVED_TIME}" =~ ^[1-9][0-9]*$ ]]; then
  echo 'Wrong saved time!'; exit 1
-elif test $SAVED_TIME -gt 4294967296; then
+elif test $SAVED_TIME -gt 4294967295; then
  echo 'Wrong saved seconds!'; exit 1
 fi
 
@@ -73,13 +73,14 @@ if [[ ! -f "${ISSUER}" ]]; then
  echo "No file \"${ISSUER}\"!"; exit 1
 elif [[ ! -s "${ISSUER}" ]]; then
  echo "File \"${ISSUER}\" is empty!"; exit 1
-elif [[ "$(wc -c < "${ISSUER}")" -ne 8 ]]; then
- echo "File \"${ISSUER}\" size is not 8 bytes!"; exit 1
+elif [[ "$(wc -c < "${ISSUER}")" -ne 12 ]]; then
+ echo "File \"${ISSUER}\" size is not 12 bytes!"; exit 1
 fi
 
-COUNTER="$(xxd -p -c 8 "${ISSUER}")"
-COUNT=$((16#${COUNTER:0:8} + 1))
-COUNTER=$((16#${COUNTER:8:8} + 1))
+COUNTS="$(xxd -p -c 12 "${ISSUER}")"
+PUBLISHED_COUNT=$((16#${COUNTS:0:8}))
+AWAITING_COUNT=$((16#${COUNTS:8:8} + 1))
+COUNTER=$((16#${COUNTS:16:8} + 1))
 POST_ID="$(printf '%08x%08x' $SAVED_TIME $COUNTER)"
 
 ISSUER="src/main/res/${POST_ID}.jpg"
@@ -98,12 +99,12 @@ elif [[ "$(file --mime-type -b "${ISSUER}")" != 'image/jpeg' ]]; then
 fi
 
 ISSUER='src/main/res/counts.bin'
-printf '%08x%08x' $COUNT $COUNTER | xxd -p -r > "${ISSUER}"
+printf '%08x%08x%08x' $PUBLISHED_COUNT $AWAITING_COUNT $COUNTER | xxd -p -r > "${ISSUER}"
 
 if test $? -ne 0; then
  echo 'Counts error!'; exit 1; fi
 
-ISSUER='src/main/res/db.bin'
+ISSUER='src/main/res/awaiting.bin'
 printf '%08x%08x' $SAVED_TIME $COUNTER | xxd -p -r >> "${ISSUER}"
 
 if test $? -ne 0; then

@@ -63,7 +63,7 @@ if test $? -ne 0; then
  echo 'Get origin date error!'; exit 1
 elif [[ ! "${ORIGIN_PUBLISHED_TIME}" =~ ^[1-9][0-9]*$ ]]; then
  echo 'Wrong origin published time!'; exit 1
-elif test $ORIGIN_PUBLISHED_TIME -gt 4294967296; then
+elif test $ORIGIN_PUBLISHED_TIME -gt 4294967295; then
  echo 'Wrong origin published seconds!'; exit 1
 fi
 
@@ -72,7 +72,7 @@ if test $? -ne 0; then
  echo 'Get forward date error!'; exit 1
 elif [[ ! "${FORWARDED_TIME}" =~ ^[1-9][0-9]*$ ]]; then
  echo 'Wrong forward time!'; exit 1
-elif test $FORWARDED_TIME -gt 4294967296; then
+elif test $FORWARDED_TIME -gt 4294967295; then
  echo 'Wrong forwarded seconds!'; exit 1
 fi
 
