@@ -79,7 +79,7 @@ fi
 
 COUNTS="$(xxd -p -c 12 "${ISSUER}")"
 PUBLISHED_COUNT=$((16#${COUNTS:0:8}))
-AWAITING_COUNT=$((16#${COUNTS:8:8} + 1))
+PENDING_COUNT=$((16#${COUNTS:8:8} + 1))
 COUNTER=$((16#${COUNTS:16:8} + 1))
 POST_ID="$(printf '%08x%08x' $SAVED_TIME $COUNTER)"
 
@@ -99,12 +99,12 @@ elif [[ "$(file --mime-type -b "${ISSUER}")" != 'image/jpeg' ]]; then
 fi
 
 ISSUER='src/main/res/counts.bin'
-printf '%08x%08x%08x' $PUBLISHED_COUNT $AWAITING_COUNT $COUNTER | xxd -p -r > "${ISSUER}"
+printf '%08x%08x%08x' $PUBLISHED_COUNT ${PENDING_COUNT} $COUNTER | xxd -p -r > "${ISSUER}"
 
 if test $? -ne 0; then
  echo 'Counts error!'; exit 1; fi
 
-ISSUER='src/main/res/awaiting.bin'
+ISSUER='src/main/res/pending.bin'
 printf '%08x%08x' $SAVED_TIME $COUNTER | xxd -p -r >> "${ISSUER}"
 
 if test $? -ne 0; then
