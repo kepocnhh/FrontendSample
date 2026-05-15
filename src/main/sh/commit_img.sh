@@ -115,8 +115,16 @@ JSON_BODY="$(cat "${ISSUER}")"
 if test $? -ne 0; then
  echo "Read \"${ISSUER}\" error!"; exit 1; fi
 
+SHA_256="$(openssl dgst -sha256 -binary "src/main/res/${POST_ID}.jpg" | xxd -p -c 32)"
+if test $? -ne 0; then
+ echo "Sha256 \"${ISSUER}\" error!"; exit 1; fi
+
+STR_VALUE="${SHA_256}"
+JSON_BODY="$(printf '%s' "${JSON_BODY}" | STR_VALUE="${STR_VALUE}" yq -M -p=json -o=json '.sha256=strenv(STR_VALUE)')"
+
 STR_VALUE="${POST_ID}"
 JSON_BODY="$(printf '%s' "${JSON_BODY}" | STR_VALUE="${STR_VALUE}" yq -M -p=json -o=json '.post_id=strenv(STR_VALUE)')"
+
 JSON_BODY="$(printf '%s' "${JSON_BODY}" | yq -M -p=json -o=json ".saved_time=${SAVED_TIME}")"
 
 ISSUER="src/main/res/${POST_ID}.json"
