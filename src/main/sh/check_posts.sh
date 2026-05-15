@@ -40,4 +40,20 @@ elif [[ ! "${POST_ID}" =~ ^[0-9a-f]{16}$ ]]; then
  echo 'Post id error!'; exit 1
 fi
 
+LAST_INDEX=$((PENDING_COUNT - 1))
+if test ${PENDING_COUNT} -eq 1; then
+ rm "${ISSUER}"
+ if test $? -ne 0; then
+  echo "Delete \"${ISSUER}\" error!"; exit 1; fi
+else
+ if test ${POST_INDEX} -lt ${LAST_INDEX}; then
+  dd if="${ISSUER}" bs=${POST_SIZE} skip=$((POST_INDEX + 1)) seek=${POST_INDEX} conv=notrunc of="${ISSUER}" 2>/dev/null
+  if test $? -ne 0; then
+   echo 'Move bytes error!'; exit 1; fi
+ fi
+ truncate -s $((LAST_INDEX * POST_SIZE)) "${ISSUER}"
+ if test $? -ne 0; then
+  echo 'Truncate bytes error!'; exit 1; fi
+fi
+
 echo 'Not implemented!'; exit 1 # todo
