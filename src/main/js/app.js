@@ -74,7 +74,7 @@ async function loadCount() {
 
   return {
     publishedCount: view.getUint32(0, false),
-    awaitingCount: view.getUint32(4, false),
+    pendingCount: view.getUint32(4, false),
     lastCounter: view.getUint32(8, false),
   };
 }

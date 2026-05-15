@@ -12,10 +12,10 @@ fi
 
 COUNTS="$(xxd -p -c 12 "${ISSUER}")"
 PUBLISHED_COUNT=$((16#${COUNTS:0:8}))
-AWAITING_COUNT=$((16#${COUNTS:8:8}))
+PENDING_COUNT=$((16#${COUNTS:8:8}))
 COUNTER=$((16#${COUNTS:16:8}))
 
-if test ${AWAITING_COUNT} -eq 0; then
- echo "No awaiting posts"; exit 0
+if test ${PENDING_COUNT} -eq 0; then
+ echo "No pending posts"; exit 0; fi
 
 echo 'Not implemented!'; exit 1 # todo
