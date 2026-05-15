@@ -58,7 +58,14 @@ else
   echo "Sort \"${ISSUER}\" error!"; exit 1; fi
 fi
 
-TIMESTAMP=$(TZ=utc date +%s)
+SAVED_TIME=$(TZ=utc date +%s)
+if test $? -ne 0; then
+ echo 'Get saved time error!'; exit 1
+elif [[ ! "${SAVED_TIME}" =~ ^[1-9][0-9]*$ ]]; then
+ echo 'Wrong saved time!'; exit 1
+elif test $SAVED_TIME -gt 4294967295; then
+ echo 'Wrong saved seconds!'; exit 1
+fi
 
 ISSUER='src/main/res/counts.bin'
 
@@ -66,14 +73,15 @@ if [[ ! -f "${ISSUER}" ]]; then
  echo "No file \"${ISSUER}\"!"; exit 1
 elif [[ ! -s "${ISSUER}" ]]; then
  echo "File \"${ISSUER}\" is empty!"; exit 1
-elif [[ "$(wc -c < "${ISSUER}")" -ne 8 ]]; then
- echo "File \"${ISSUER}\" size is not 8 bytes!"; exit 1
+elif [[ "$(wc -c < "${ISSUER}")" -ne 12 ]]; then
+ echo "File \"${ISSUER}\" size is not 12 bytes!"; exit 1
 fi
 
-COUNTER="$(xxd -p -c 8 "${ISSUER}")"
-COUNT=$((16#${COUNTER:0:8} + 1))
-COUNTER=$((16#${COUNTER:8:8} + 1))
-POST_ID="$(printf '%08x%08x' $TIMESTAMP $COUNTER)"
+COUNTS="$(xxd -p -c 12 "${ISSUER}")"
+PUBLISHED_COUNT=$((16#${COUNTS:0:8}))
+PENDING_COUNT=$((16#${COUNTS:8:8} + 1))
+COUNTER=$((16#${COUNTS:16:8} + 1))
+POST_ID="$(printf '%08x%08x' $SAVED_TIME $COUNTER)"
 
 ISSUER="src/main/res/${POST_ID}.jpg"
 if test -f "${ISSUER}"; then
@@ -91,21 +99,30 @@ elif [[ "$(file --mime-type -b "${ISSUER}")" != 'image/jpeg' ]]; then
 fi
 
 ISSUER='src/main/res/counts.bin'
-printf '%08x%08x' $COUNT $COUNTER | xxd -p -r > "${ISSUER}"
+printf '%08x%08x%08x' $PUBLISHED_COUNT ${PENDING_COUNT} $COUNTER | xxd -p -r > "${ISSUER}"
 
 if test $? -ne 0; then
  echo 'Counts error!'; exit 1; fi
 
-ISSUER='src/main/res/db.bin'
-printf '%08x%08x' $TIMESTAMP $COUNTER | xxd -p -r >> "${ISSUER}"
+ISSUER='src/main/res/pending.bin'
+printf '%08x%08x' $SAVED_TIME $COUNTER | xxd -p -r >> "${ISSUER}"
 
 if test $? -ne 0; then
  echo 'Database error!'; exit 1; fi
 
-ISSUER="src/main/res/${POST_ID}.json"
-mv "/tmp/file_${NEW_FILE_INDEX}.json" "${ISSUER}"
+ISSUER="/tmp/file_${NEW_FILE_INDEX}.json"
+JSON_BODY="$(cat "${ISSUER}")"
 if test $? -ne 0; then
- echo "Move \"${ISSUER}\" error!"; exit 1; fi
+ echo "Read \"${ISSUER}\" error!"; exit 1; fi
+
+STR_VALUE="${POST_ID}"
+JSON_BODY="$(printf '%s' "${JSON_BODY}" | STR_VALUE="${STR_VALUE}" yq -M -p=json -o=json '.post_id=strenv(STR_VALUE)')"
+JSON_BODY="$(printf '%s' "${JSON_BODY}" | yq -M -p=json -o=json ".saved_time=${SAVED_TIME}")"
+
+ISSUER="src/main/res/${POST_ID}.json"
+printf '%s' "${JSON_BODY}" > "${ISSUER}"
+if test $? -ne 0; then
+ echo "Write \"${ISSUER}\" error!"; exit 1; fi
 
 git add . && git commit -m "new post ${POST_ID}"
 

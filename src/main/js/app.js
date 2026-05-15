@@ -30,19 +30,23 @@ function setPageInQuery(page) {
 
 async function loadImages() {
   const countData = await loadCount();
-  count = countData.count;
+  count = countData.publishedCount;
 
   if (!isCurrentPageValid()) {
     showErrorPage();
     return;
   }
 
-  pageItems = await loadPageItems();
+  pageItems = count === 0 ? [] : await loadPageItems();
   renderPage();
 }
 
 function isCurrentPageValid() {
   const pages = Math.ceil(count / pageSize);
+
+  if (count === 0) {
+    return currentPage === 0;
+  }
 
   return currentPage !== null && currentPage >= 0 && currentPage < pages;
 }
@@ -62,21 +66,22 @@ async function loadCount() {
 
   const buffer = await response.arrayBuffer();
 
-  if (buffer.byteLength !== 8) {
+  if (buffer.byteLength !== 12) {
     throw new Error(`Invalid counts.bin size: ${buffer.byteLength}`);
   }
 
   const view = new DataView(buffer);
 
   return {
-    count: view.getUint32(0, false),
-    lastCounter: view.getUint32(4, false),
+    publishedCount: view.getUint32(0, false),
+    pendingCount: view.getUint32(4, false),
+    lastCounter: view.getUint32(8, false),
   };
 }
 
 async function loadPageItems() {
   const { byteStart, byteEnd } = getPageBounds();
-  const response = await fetch(`./src/main/res/db.bin?cache=${cacheKey}`, {
+  const response = await fetch(`./src/main/res/published.bin?cache=${cacheKey}`, {
     cache: 'no-store',
     headers: {
       Range: `bytes=${byteStart}-${byteEnd}`,
@@ -84,7 +89,7 @@ async function loadPageItems() {
   });
 
   if (!response.ok) {
-    throw new Error(`Cannot load db.bin: ${response.status}`);
+    throw new Error(`Cannot load published.bin: ${response.status}`);
   }
 
   let buffer = await response.arrayBuffer();
@@ -95,7 +100,7 @@ async function loadPageItems() {
   }
 
   if (buffer.byteLength !== expectedSize) {
-    throw new Error(`Invalid db.bin page size: ${buffer.byteLength}`);
+    throw new Error(`Invalid published.bin page size: ${buffer.byteLength}`);
   }
 
   return parseRecords(buffer).reverse();

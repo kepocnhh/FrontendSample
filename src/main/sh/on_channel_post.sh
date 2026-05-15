@@ -58,18 +58,22 @@ elif [[ ! "${FOUND_INDEX}" =~ ^(-1|0|[1-9][0-9]*)$ ]]; then
 elif test $FOUND_INDEX -ge 0; then
  echo "Ids ${ORIGIN_ID}/${ORIGIN_MESSAGE_ID} found"; exit 204; fi
 
-ORIGIN_DATE="$(printf '%s' "${CHANNEL_POST}" | yq -p=json -er '.forward_origin.date')"
+ORIGIN_PUBLISHED_TIME="$(printf '%s' "${CHANNEL_POST}" | yq -p=json -er '.forward_origin.date')"
 if test $? -ne 0; then
  echo 'Get origin date error!'; exit 1
-elif [[ ! "${ORIGIN_DATE}" =~ ^[1-9][0-9]*$ ]]; then
- echo 'Wrong origin date!'; exit 1
+elif [[ ! "${ORIGIN_PUBLISHED_TIME}" =~ ^[1-9][0-9]*$ ]]; then
+ echo 'Wrong origin published time!'; exit 1
+elif test $ORIGIN_PUBLISHED_TIME -gt 4294967295; then
+ echo 'Wrong origin published seconds!'; exit 1
 fi
 
-FORWARD_DATE="$(printf '%s' "${CHANNEL_POST}" | yq -p=json -er '.date')"
+FORWARDED_TIME="$(printf '%s' "${CHANNEL_POST}" | yq -p=json -er '.date')"
 if test $? -ne 0; then
  echo 'Get forward date error!'; exit 1
-elif [[ ! "${FORWARD_DATE}" =~ ^[1-9][0-9]*$ ]]; then
- echo 'Wrong forward date!'; exit 1
+elif [[ ! "${FORWARDED_TIME}" =~ ^[1-9][0-9]*$ ]]; then
+ echo 'Wrong forward time!'; exit 1
+elif test $FORWARDED_TIME -gt 4294967295; then
+ echo 'Wrong forwarded seconds!'; exit 1
 fi
 
 ORIGIN_CAPTION="$(printf '%s' "${CHANNEL_POST}" | yq -p=json -r '.caption // ""')"
@@ -110,8 +114,8 @@ ISSUER="/tmp/file_${NEW_FILE_INDEX}.json"
 JSON_BODY="{
 \"origin_id\": ${ORIGIN_ID},
 \"origin_message_id\": ${ORIGIN_MESSAGE_ID},
-\"origin_date\": ${ORIGIN_DATE},
-\"forward_date\": ${FORWARD_DATE}
+\"origin_published_time\": ${ORIGIN_PUBLISHED_TIME},
+\"forwarded_time\": ${FORWARDED_TIME}
 }"
 
 STR_VALUE="${ORIGIN_CAPTION}"
